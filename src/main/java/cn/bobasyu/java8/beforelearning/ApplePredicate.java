@@ -1,4 +1,4 @@
-package cn.bobasyu.java8.predicate;
+package cn.bobasyu.java8.beforelearning;
 
 /**
  * @author Boba

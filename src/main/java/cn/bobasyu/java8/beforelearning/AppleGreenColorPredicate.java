@@ -1,4 +1,4 @@
-package cn.bobasyu.java8.predicate;
+package cn.bobasyu.java8.beforelearning;
 
 /**
  * 删选绿色的苹果
