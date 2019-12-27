@@ -2,6 +2,10 @@ package cn.bobasyu.java8.stream;
 
 import lombok.var;
 
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -135,7 +139,10 @@ public class StreamTest {
         Stream<Integer> stream = intStream.boxed();
     }
 
-    public void streamCreate() {
+    /**
+     * 创建流
+     */
+    public void streamCreate(String filePath) {
         // 由值创建流
         Stream<String> stringStream = Stream.of("abc", "def", "ghi");
         // 由数组创建流
@@ -147,5 +154,18 @@ public class StreamTest {
         Stream.iterate(0, n -> n + 1).limit(10).forEach(System.out::println);
         // 随机数流
         Stream.generate(Math::random).limit(10).forEach(System.out::println);
+
+        // 由文件生成流
+        try {
+            // 文件流会自动关闭
+            Stream<String> lines = Files.lines(Paths.get(filePath), Charset.defaultCharset());
+            // 获取非重复单词个数
+            Long count = lines
+                    .flatMap(line -> Arrays.stream(line.split("")))
+                    .distinct()
+                    .count();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
