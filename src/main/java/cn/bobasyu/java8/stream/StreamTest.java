@@ -127,10 +127,25 @@ public class StreamTest {
 
     /**
      * 流转换
+     *
+     * @param menu
      */
     public void changeStream(List<Dish> menu) {
         IntStream intStream = menu.stream().mapToInt(Dish::getCalories);
         Stream<Integer> stream = intStream.boxed();
     }
 
+    public void streamCreate() {
+        // 由值创建流
+        Stream<String> stringStream = Stream.of("abc", "def", "ghi");
+        // 由数组创建流
+        int[] num = {1, 2, 3, 4};
+        IntStream intStream = Arrays.stream(num);
+        // 创建空流
+        Stream<String> emptyStream = Stream.empty();
+        // 由函数创建流
+        Stream.iterate(0, n -> n + 1).limit(10).forEach(System.out::println);
+        // 随机数流
+        Stream.generate(Math::random).limit(10).forEach(System.out::println);
+    }
 }
