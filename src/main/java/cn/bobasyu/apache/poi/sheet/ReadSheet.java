@@ -16,7 +16,6 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
  * @author Boba
  */
 public class ReadSheet {
-    static XSSFRow row;
 
     public static void main(String[] args) throws Exception {
         String path = "src\\main\\java\\cn\\bobasyu\\apache\\poi\\sheet\\writeSheet.xlsx";
@@ -24,9 +23,7 @@ public class ReadSheet {
         XSSFWorkbook workbook = new XSSFWorkbook(fis);
         XSSFSheet spreadsheet = workbook.getSheetAt(0);
 
-        Iterator<Row> rowIterator = spreadsheet.iterator();
-        while (rowIterator.hasNext()) {
-            row = (XSSFRow) rowIterator.next();
+        for (Row row : spreadsheet) {
             Iterator<Cell> cellIterator = row.cellIterator();
             while (cellIterator.hasNext()) {
                 Cell cell = cellIterator.next();
