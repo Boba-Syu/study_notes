@@ -1,9 +1,8 @@
 package cn.bobasyu.apache.poi.test;
 
 import com.opencsv.CSVReader;
-import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFRichTextString;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -36,30 +35,22 @@ public class FlaggedTemplateExcel {
         String newExcel = "src\\main\\java\\cn\\bobasyu\\apache\\poi\\test\\new.xlsx";
         FlaggedTemplateExcel flaggedTemplateExcel = new FlaggedTemplateExcel();
         List<String[]> msg = flaggedTemplateExcel.readCsv();
-        flaggedTemplateExcel.inputMsg(msg, fromExcel, tempExcel);
-        flaggedTemplateExcel.addHeaderColor(tempExcel, newExcel);
+        int n = flaggedTemplateExcel.inputMsg(msg, fromExcel, tempExcel);
+        flaggedTemplateExcel.addHeaderColor(tempExcel, newExcel, n);
     }
 
-    public void addHeaderColor(String fromExcel, String newExcel) {
+    public void addHeaderColor(String fromExcel, String newExcel, int n) {
         try (FileInputStream fis = new FileInputStream(fromExcel); FileOutputStream fos = new FileOutputStream(newExcel)) {
             XSSFWorkbook workbook = new XSSFWorkbook(fis);
-            int num = 13;
+            int num = 17;
             XSSFSheet spreadsheet = workbook.getSheet("Highlight");
-            for (Row row : spreadsheet) {
-                if ("data source".equals(row.getCell(0).getStringCellValue().toLowerCase())) {
-                    for (int i = 0; i < num; i++) {
-                        Font font = workbook.createFont();
-                        font.setColor(HSSFColor.HSSFColorPredefined.WHITE.getIndex());
-                        Cell cell = row.getCell(i);
-                        String msg = cell.getStringCellValue();
-                        XSSFRichTextString richString = new XSSFRichTextString(msg);
-                        richString.applyFont(0, 6, font);
-                        cell.setCellValue(richString);
-                        CellStyle cellStyle = cell.getCellStyle();
-                        cellStyle.setFillForegroundColor(IndexedColors.RED.getIndex());
-                        cellStyle.setFont(font);
-                        cell.setCellStyle(cellStyle);
-                    }
+            XSSFCellStyle cellsStyle = workbook.getSheet("All").getRow(0).getCell(0).getCellStyle();
+            int[] nums = new int[]{2, n};
+            for (int r : nums) {
+                Row row = spreadsheet.getRow(r);
+                for (int i = 0; i < num; i++) {
+                    Cell cell = row.getCell(i);
+                    cell.setCellStyle(cellsStyle);
                 }
             }
             workbook.write(fos);
@@ -75,18 +66,20 @@ public class FlaggedTemplateExcel {
      * @param fromExcel 模板文件名
      * @param newExcel  生成的文件名
      */
-    public void inputMsg(List<String[]> msg, String fromExcel, String newExcel) {
+    public int inputMsg(List<String[]> msg, String fromExcel, String newExcel) {
         String[] header = msg.get(0);
+        int n = 2;
         int colNumber = header.length;
         try (FileInputStream fis = new FileInputStream(fromExcel); FileOutputStream fos = new FileOutputStream(newExcel)) {
             XSSFWorkbook workbook = new XSSFWorkbook(fis);
             List<String[]> msg2 = this.readCsv();
-            pageHighLight(msg2, colNumber, workbook);
+            n = pageHighLight(msg2, colNumber, workbook);
             pageAll(msg, colNumber, workbook);
             workbook.write(fos);
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return n;
     }
 
     /**
@@ -96,7 +89,7 @@ public class FlaggedTemplateExcel {
      * @param colNumber 文件列的数目
      * @param workbook  已打开的文件workbook
      */
-    public void pageHighLight(List<String[]> msg, int colNumber, XSSFWorkbook workbook) {
+    public int pageHighLight(List<String[]> msg, int colNumber, XSSFWorkbook workbook) {
         XSSFSheet spreadsheet = workbook.getSheet("Highlight");
         // 取消合并单元格
         List<String[]> upMsg = msg.stream()
@@ -125,6 +118,7 @@ public class FlaggedTemplateExcel {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return upMsg.size() + 5;
     }
 
     /**
