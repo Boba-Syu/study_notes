@@ -2,7 +2,6 @@ package cn.bobasyu.apache.poi.test;
 
 import com.opencsv.CSVReader;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -31,31 +30,29 @@ public class FlaggedTemplateExcel {
 
     public static void main(String[] args) {
         String fromExcel = "src\\main\\java\\cn\\bobasyu\\apache\\poi\\test\\flagger_template_new.xlsx";
-        String tempExcel = "src\\main\\java\\cn\\bobasyu\\apache\\poi\\test\\temp.xlsx";
         String newExcel = "src\\main\\java\\cn\\bobasyu\\apache\\poi\\test\\new.xlsx";
         FlaggedTemplateExcel flaggedTemplateExcel = new FlaggedTemplateExcel();
         List<String[]> msg = flaggedTemplateExcel.readCsv();
-        int n = flaggedTemplateExcel.inputMsg(msg, fromExcel, tempExcel);
-        flaggedTemplateExcel.addHeaderColor(tempExcel, newExcel, n);
+        flaggedTemplateExcel.inputMsg(msg, fromExcel, newExcel);
     }
 
-    public void addHeaderColor(String fromExcel, String newExcel, int n) {
-        try (FileInputStream fis = new FileInputStream(fromExcel); FileOutputStream fos = new FileOutputStream(newExcel)) {
-            XSSFWorkbook workbook = new XSSFWorkbook(fis);
-            int num = 17;
-            XSSFSheet spreadsheet = workbook.getSheet("Highlight");
-            XSSFCellStyle cellsStyle = workbook.getSheet("All").getRow(0).getCell(0).getCellStyle();
-            int[] nums = new int[]{2, n};
-            for (int r : nums) {
-                Row row = spreadsheet.getRow(r);
-                for (int i = 0; i < num; i++) {
-                    Cell cell = row.getCell(i);
-                    cell.setCellStyle(cellsStyle);
-                }
+    /**
+     * 将表头换成红底白字
+     *
+     * @param workbook 已打开的workbook
+     * @param n 表头所在行数
+     */
+    public void addHeaderColor(Workbook workbook, int[] n) {
+        int num = 17;
+        Sheet spreadsheet = workbook.getSheet("Highlight");
+        CellStyle cellsStyle = workbook.getSheet("All").getRow(0).getCell(0).getCellStyle();
+
+        for (int r : n) {
+            Row row = spreadsheet.getRow(r);
+            for (int i = 0; i < num; i++) {
+                Cell cell = row.getCell(i);
+                cell.setCellStyle(cellsStyle);
             }
-            workbook.write(fos);
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 
@@ -66,21 +63,21 @@ public class FlaggedTemplateExcel {
      * @param fromExcel 模板文件名
      * @param newExcel  生成的文件名
      */
-    public int inputMsg(List<String[]> msg, String fromExcel, String newExcel) {
+    public void inputMsg(List<String[]> msg, String fromExcel, String newExcel) {
         String[] header = msg.get(0);
-        int n = 2;
         int colNumber = header.length;
         try (FileInputStream fis = new FileInputStream(fromExcel); FileOutputStream fos = new FileOutputStream(newExcel)) {
             XSSFWorkbook workbook = new XSSFWorkbook(fis);
             List<String[]> msg2 = this.readCsv();
-            n = pageHighLight(msg2, colNumber, workbook);
+            int n = pageHighLight(msg2, colNumber, workbook);
             pageAll(msg, colNumber, workbook);
+            addHeaderColor(workbook, new int[]{2, n});
             workbook.write(fos);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return n;
     }
+
 
     /**
      * 名为All的sheet中的数据灌入
