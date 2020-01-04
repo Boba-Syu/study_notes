@@ -1,9 +1,9 @@
 package cn.bobasyu.apache.poi.test;
 
 import com.opencsv.CSVReader;
+import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.ss.util.CellRangeAddress;
-import org.apache.poi.ss.util.CellReference;
+import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -11,7 +11,6 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,7 +20,7 @@ import java.util.stream.Collectors;
  * @author Boba
  */
 public class FlaggedTemplateExcel {
-    public final List<String> headers;
+    private final List<String> headers;
 
     public FlaggedTemplateExcel() {
         headers = new ArrayList<>();
@@ -33,10 +32,40 @@ public class FlaggedTemplateExcel {
 
     public static void main(String[] args) {
         String fromExcel = "src\\main\\java\\cn\\bobasyu\\apache\\poi\\test\\flagger_template_new.xlsx";
+        String tempExcel = "src\\main\\java\\cn\\bobasyu\\apache\\poi\\test\\temp.xlsx";
         String newExcel = "src\\main\\java\\cn\\bobasyu\\apache\\poi\\test\\new.xlsx";
         FlaggedTemplateExcel flaggedTemplateExcel = new FlaggedTemplateExcel();
         List<String[]> msg = flaggedTemplateExcel.readCsv();
-        flaggedTemplateExcel.inputMsg(msg, fromExcel, newExcel);
+        flaggedTemplateExcel.inputMsg(msg, fromExcel, tempExcel);
+        flaggedTemplateExcel.addHeaderColor(tempExcel, newExcel);
+    }
+
+    public void addHeaderColor(String fromExcel, String newExcel) {
+        try (FileInputStream fis = new FileInputStream(fromExcel); FileOutputStream fos = new FileOutputStream(newExcel)) {
+            XSSFWorkbook workbook = new XSSFWorkbook(fis);
+            int num = 13;
+            XSSFSheet spreadsheet = workbook.getSheet("Highlight");
+            for (Row row : spreadsheet) {
+                if ("data source".equals(row.getCell(0).getStringCellValue().toLowerCase())) {
+                    for (int i = 0; i < num; i++) {
+                        Font font = workbook.createFont();
+                        font.setColor(HSSFColor.HSSFColorPredefined.WHITE.getIndex());
+                        Cell cell = row.getCell(i);
+                        String msg = cell.getStringCellValue();
+                        XSSFRichTextString richString = new XSSFRichTextString(msg);
+                        richString.applyFont(0, 6, font);
+                        cell.setCellValue(richString);
+                        CellStyle cellStyle = cell.getCellStyle();
+                        cellStyle.setFillForegroundColor(IndexedColors.RED.getIndex());
+                        cellStyle.setFont(font);
+                        cell.setCellStyle(cellStyle);
+                    }
+                }
+            }
+            workbook.write(fos);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -93,26 +122,8 @@ public class FlaggedTemplateExcel {
             input(upMsg, colNumber, spreadsheet, 2);
             addHeader(spreadsheet, upMsg.size(), workbook);
             input(downMsg, colNumber, spreadsheet, upMsg.size() + 5);
-            //headColor(spreadsheet, upMsg.size(), colNumber);
         } catch (Exception e) {
             e.printStackTrace();
-        }
-    }
-
-    private void headColor(Sheet spreadsheet, int len, int colNumber) {
-        Cell cell;
-        // 表头颜色
-        for (int i = 0; i < colNumber; i++) {
-            cell = spreadsheet.getRow(2).getCell(i);
-            CellStyle style = cell.getCellStyle();
-            style.setFillForegroundColor(IndexedColors.RED.getIndex());
-            cell.setCellStyle(style);
-        }
-        for (int i = 0; i < colNumber; i++) {
-            cell = spreadsheet.getRow(len + 5).getCell(i);
-            CellStyle style = cell.getCellStyle();
-            style.setFillForegroundColor(IndexedColors.RED.getIndex());
-            cell.setCellStyle(style);
         }
     }
 
