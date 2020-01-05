@@ -11,6 +11,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * 根据Excel模板灌入CSV数据
@@ -18,6 +19,9 @@ import java.util.stream.Collectors;
  * @author Boba
  */
 public class FlaggedTemplateExcel {
+    /**
+     * Highlight页表头前的信息
+     */
     private final List<String> headers;
 
     public FlaggedTemplateExcel() {
@@ -40,7 +44,7 @@ public class FlaggedTemplateExcel {
      * 将表头换成红底白字
      *
      * @param workbook 已打开的workbook
-     * @param n 表头所在行数
+     * @param n        表头所在行数
      */
     public void addHeaderColor(Workbook workbook, int[] n) {
         int num = 17;
@@ -49,10 +53,10 @@ public class FlaggedTemplateExcel {
 
         for (int r : n) {
             Row row = spreadsheet.getRow(r);
-            for (int i = 0; i < num; i++) {
+            IntStream.rangeClosed(0, num - 1).forEach(i -> {
                 Cell cell = row.getCell(i);
                 cell.setCellStyle(cellsStyle);
-            }
+            });
         }
     }
 
@@ -88,25 +92,17 @@ public class FlaggedTemplateExcel {
      */
     public int pageHighLight(List<String[]> msg, int colNumber, XSSFWorkbook workbook) {
         XSSFSheet spreadsheet = workbook.getSheet("Highlight");
-        // 取消合并单元格
-        List<String[]> upMsg = msg.stream()
-                .filter(strings -> {
-                    for (String str : strings) {
-                        if ("N/A".equals(str) || "↓".equals(str)) {
-                            return false;
-                        }
-                    }
-                    return true;
-                }).collect(Collectors.toList());
-        List<String[]> downMsg = msg.stream()
-                .filter(strings -> {
-                    for (String str : strings) {
-                        if ("N/A".equals(str) || "↑".equals(str)) {
-                            return false;
-                        }
-                    }
-                    return true;
-                }).collect(Collectors.toList());
+        List<String[]> upMsg = new ArrayList<>();
+        upMsg.add(msg.get(0));
+        upMsg.addAll(msg.stream()
+                .filter(strings -> "↑".equals(strings[15]) && "↑".equals(strings[16]))
+                .collect(Collectors.toList()));
+
+        List<String[]> downMsg = new ArrayList<>();
+        downMsg.add(msg.get(0));
+        downMsg.addAll(msg.stream()
+                .filter(strings -> "↓".equals(strings[15]) && "↓".equals(strings[16]))
+                .collect(Collectors.toList()));
 
         try {
             input(upMsg, colNumber, spreadsheet, 2);
@@ -139,17 +135,14 @@ public class FlaggedTemplateExcel {
         Cell cell = row.createCell(0);
         cell.setCellValue(headers.get(0));
         cell.setCellStyle(cellStyle);
-
+        // upMsg表头前信息
         row = spreadsheet.createRow(1);
         cell = row.createCell(0);
         cell.setCellValue(headers.get(1));
-
-        row = spreadsheet.createRow(4 + len);
-        row.createCell(0).setCellValue(headers.get(3));
-
+        // 空行
         row = spreadsheet.createRow(2 + len);
         row.createCell(0).setCellValue("");
-
+        // downMsg表头前信息
         row = spreadsheet.createRow(3 + len);
         cell = row.createCell(0);
         cell.setCellValue(headers.get(2));
@@ -175,12 +168,19 @@ public class FlaggedTemplateExcel {
         }
     }
 
+    /**
+     * 插入数据
+     *
+     * @param msg         要插入的信息
+     * @param colNumber   列的数目
+     * @param spreadsheet 要插入的sheet
+     * @param startRow    从sheet的第startRow行开始插入
+     */
     public void input(List<String[]> msg, int colNumber, XSSFSheet spreadsheet, int startRow) {
-        Row row;
-        Cell cell;
-        String[] rowMsg;
-        for (int i = startRow; i < startRow + msg.size(); i++) {
-            row = spreadsheet.getRow(i);
+        IntStream.rangeClosed(startRow, startRow + msg.size() - 1).forEach(i -> {
+            Cell cell;
+            String[] rowMsg;
+            Row row = spreadsheet.getRow(i);
             if (row == null) {
                 row = spreadsheet.createRow(i);
             }
@@ -204,6 +204,7 @@ public class FlaggedTemplateExcel {
                     //不是数字类型
                     cell.setCellValue(rowMsg[j]);
                     CellStyle style = cell.getCellStyle();
+                    // 百分比类型的数字
                     if (rowMsg[j].charAt(rowMsg[j].length() - 1) == '%') {
                         double temp = Double.parseDouble(rowMsg[j].replaceAll("%", "")) / 100;
                         cell.setCellValue(temp);
@@ -215,24 +216,19 @@ public class FlaggedTemplateExcel {
                 }
             }
             if (i != startRow) {
-                if (flag) {
-                    // 字体颜色
-                    for (int j = 0; j < colNumber; j++) {
-                        cell = row.getCell(j);
-                        CellStyle style = cell.getCellStyle();
+                // 字体颜色
+                for (int j = 0; j < colNumber; j++) {
+                    cell = row.getCell(j);
+                    CellStyle style = cell.getCellStyle();
+                    if (flag) {
                         style.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
-                        cell.setCellStyle(style);
-                    }
-                } else {
-                    for (int j = 0; j < colNumber; j++) {
-                        cell = row.getCell(j);
-                        CellStyle style = cell.getCellStyle();
+                    } else {
                         style.setFillForegroundColor(IndexedColors.WHITE.getIndex());
-                        cell.setCellStyle(style);
                     }
+                    cell.setCellStyle(style);
                 }
             }
-        }
+        });
     }
 
     /**
@@ -260,13 +256,9 @@ public class FlaggedTemplateExcel {
      * @return 若为数字则返回true, 否则为false
      */
     public boolean isNumeric(String str) {
-        for (int i = 0; i < str.length(); i++) {
-            if (!Character.isDigit(str.charAt(i))) {
-                if (str.charAt(i) != '.') {
-                    return false;
-                }
-            }
-        }
-        return true;
+        return IntStream.rangeClosed(0, str.length() - 1).allMatch(i -> {
+            char dot = '.';
+            return str.charAt(i) == dot || Character.isDigit(str.charAt(i));
+        });
     }
 }
