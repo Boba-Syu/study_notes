@@ -1,6 +1,7 @@
 package cn.bobasyu.apache.poi.test;
 
 import com.opencsv.CSVReader;
+import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -23,6 +24,7 @@ public class FlaggedTemplateExcel {
      * Highlight页表头前的信息
      */
     private final List<String> headers;
+    private int colNumber;
 
     public FlaggedTemplateExcel() {
         headers = new ArrayList<>();
@@ -33,7 +35,7 @@ public class FlaggedTemplateExcel {
     }
 
     public static void main(String[] args) {
-        String fromExcel = "src\\main\\java\\cn\\bobasyu\\apache\\poi\\test\\flagger_template_new.xlsx";
+        String fromExcel = "src\\main\\java\\cn\\bobasyu\\apache\\poi\\test\\flagger_template.xlsx";
         String newExcel = "src\\main\\java\\cn\\bobasyu\\apache\\poi\\test\\new.xlsx";
         FlaggedTemplateExcel flaggedTemplateExcel = new FlaggedTemplateExcel();
         List<String[]> msg = flaggedTemplateExcel.readCsv();
@@ -47,9 +49,10 @@ public class FlaggedTemplateExcel {
      * @param n        表头所在行数
      */
     private void addHeaderColor(Workbook workbook, int[] n) {
-        int num = 17;
+        int num = this.colNumber;
         Sheet spreadsheet = workbook.getSheet("Highlight");
-        CellStyle cellsStyle = workbook.getSheet("All").getRow(0).getCell(0).getCellStyle();
+        CellStyle cellsStyle = workbook.createCellStyle();
+        cellsStyle.cloneStyleFrom(workbook.getSheet("All").getRow(0).getCell(0).getCellStyle());
 
         for (int r : n) {
             Row row = spreadsheet.getRow(r);
@@ -91,23 +94,24 @@ public class FlaggedTemplateExcel {
      * @param workbook  已打开的文件workbook
      */
     private int pageHighLight(List<String[]> msg, int colNumber, XSSFWorkbook workbook) {
+        this.colNumber = colNumber;
         XSSFSheet spreadsheet = workbook.getSheet("Highlight");
         List<String[]> upMsg = new ArrayList<>();
         upMsg.add(msg.get(0));
         upMsg.addAll(msg.stream()
-                .filter(strings -> "↑".equals(strings[15]) && "↑".equals(strings[16]))
+                .filter(strings -> "↑".equals(strings[colNumber - 1]) && "↑".equals(strings[colNumber - 2]))
                 .collect(Collectors.toList()));
 
         List<String[]> downMsg = new ArrayList<>();
         downMsg.add(msg.get(0));
         downMsg.addAll(msg.stream()
-                .filter(strings -> "↓".equals(strings[15]) && "↓".equals(strings[16]))
+                .filter(strings -> "↓".equals(strings[colNumber - 1]) && "↓".equals(strings[colNumber - 2]))
                 .collect(Collectors.toList()));
 
         try {
-            input(upMsg, colNumber, spreadsheet, 2);
+            input(upMsg, colNumber, spreadsheet, 2, workbook);
             addHeader(spreadsheet, upMsg.size(), workbook);
-            input(downMsg, colNumber, spreadsheet, upMsg.size() + 5);
+            input(downMsg, colNumber, spreadsheet, upMsg.size() + 5, workbook);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -162,7 +166,7 @@ public class FlaggedTemplateExcel {
     private void pageAll(List<String[]> msg, int colNumber, XSSFWorkbook workbook) {
         try {
             XSSFSheet spreadsheet = workbook.getSheet("All");
-            input(msg, colNumber, spreadsheet, 0);
+            input(msg, colNumber, spreadsheet, 0, workbook);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -176,7 +180,7 @@ public class FlaggedTemplateExcel {
      * @param spreadsheet 要插入的sheet
      * @param startRow    从sheet的第startRow行开始插入
      */
-    private void input(List<String[]> msg, int colNumber, XSSFSheet spreadsheet, int startRow) {
+    private void input(List<String[]> msg, int colNumber, XSSFSheet spreadsheet, int startRow, Workbook workbook) {
         IntStream.rangeClosed(startRow, startRow + msg.size() - 1).forEach(i -> {
             Cell cell;
             String[] rowMsg;
@@ -185,7 +189,6 @@ public class FlaggedTemplateExcel {
                 row = spreadsheet.createRow(i);
             }
             rowMsg = msg.get(i - startRow);
-            boolean flag = false;
             for (int j = 0; j < colNumber; j++) {
                 cell = row.getCell(j);
                 if (cell == null) {
@@ -211,19 +214,33 @@ public class FlaggedTemplateExcel {
                     }
                     cell.setCellStyle(style);
                 }
-                if ("N/A".equals(rowMsg[j])) {
-                    flag = true;
-                }
             }
+
+            boolean flag = "n/a".equals(rowMsg[colNumber - 6].toLowerCase()) || "nan".equals(rowMsg[colNumber - 6].toLowerCase());
+
             if (i != startRow) {
                 // 字体颜色
                 for (int j = 0; j < colNumber; j++) {
                     cell = row.getCell(j);
-                    CellStyle style = cell.getCellStyle();
+                    CellStyle style = workbook.createCellStyle();
+                    style.cloneStyleFrom(cell.getCellStyle());
+
                     if (flag) {
                         style.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
                     } else {
                         style.setFillForegroundColor(IndexedColors.WHITE.getIndex());
+                    }
+
+                    if ("↑".equals(rowMsg[j])) {
+                        Font font = workbook.createFont();
+                        font.setColor(HSSFColor.HSSFColorPredefined.GREEN.getIndex());
+                        font.setFontName("等线");
+                        style.setFont(font);
+                    } else if ("↓".equals(rowMsg[j])) {
+                        Font font = workbook.createFont();
+                        font.setFontName("等线");
+                        font.setColor(HSSFColor.HSSFColorPredefined.RED.getIndex());
+                        style.setFont(font);
                     }
                     cell.setCellStyle(style);
                 }
@@ -238,7 +255,7 @@ public class FlaggedTemplateExcel {
      */
     private List<String[]> readCsv() {
         List<String[]> msg = null;
-        String file = "src\\main\\java\\cn\\bobasyu\\apache\\poi\\test\\MP Flagger.csv";
+        String file = "src\\main\\java\\cn\\bobasyu\\apache\\poi\\test\\jesse—test.csv";
         try (InputStream input = new FileInputStream(file);
              InputStreamReader isr = new InputStreamReader(input, StandardCharsets.UTF_8);
              CSVReader reader = new CSVReader(isr)) {
