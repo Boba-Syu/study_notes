@@ -4,6 +4,8 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
+ * 延迟列表求质数
+ *
  * @author Boba
  */
 public class LazyList<T> {
@@ -35,7 +37,7 @@ public class LazyList<T> {
         return isEmpty() ?
                 this :
                 p.test(getHead()) ?
-                        new LazyList<T>(getHead(), () -> getTail().filter(p)) :
+                        new LazyList<>(getHead(), () -> getTail().filter(p)) :
                         getTail().filter(p);
     }
 
@@ -58,6 +60,5 @@ public class LazyList<T> {
     public static void main(String[] args) {
         LazyList<Integer> numbers = from(2);
         printAll(primes(numbers), 51263);
-
     }
 }
