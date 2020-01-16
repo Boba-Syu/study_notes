@@ -8,22 +8,33 @@ package cn.bobasyu.scala
  */
 object ObjectAndClass {
   def main(args: Array[String]): Unit = {
-    val classTest = new ObjectAndClass(1, 2)
-    println(classTest.aPlusB())
+    val classTest = new ObjectAndClass()
+    println(classTest.test())
     val test: Test = new Test(10, 20)
     test.printAll()
   }
 
 
-  class ObjectAndClass(_a: Int, _b: Int) {
-    var a: Int = _a
-    val b: Int = _b
+  class ObjectAndClass(xa: Int, xb: Int) {
+    var a: Int = xa
+    val b: Int = xb
 
-    def aPlusB(): Int = a + b
+    // 构造方法重载
+    def this() = {
+      this(1, 2)
+    }
+
+    def test(): Int = a + b
   }
 
   // 继承
-  class Test(val _a: Int, val _b: Int) extends ObjectAndClass(_a, _b) {
+  class Test(val x: Int, val y: Int) extends ObjectAndClass(x, y) {
+
+    override def test(): Int = {
+      println("重写了父类的方法")
+      a + b
+    }
+
     def printAll(): Unit = {
       for (i <- 0 until 3) {
         println(s"a = $a, b = $b")
@@ -38,6 +49,18 @@ object ObjectAndClass {
 
     }
 
+  }
+
+  class Maker private() {
+    def fun(): Unit = {
+      println("私有构造方法类")
+    }
+  }
+
+  object Maker {
+    def builtMaker(): Maker = {
+      return new Maker
+    }
   }
 
 }

@@ -3,3 +3,6 @@
 /.idea
 /.iml
 /src/main/java/cn/bobasyu/apache/poi/db/
+!/src/main/java/cn/bobasyu/csv/Sandalwood_JD_All Sector_Data up to Dec 2019_20200114.csv
+src/main/java/cn/bobasyu/apache/poi/clone/result.xlsx
+src/main/java/cn/bobasyu/apache/poi/sxssf/test.xlsx
