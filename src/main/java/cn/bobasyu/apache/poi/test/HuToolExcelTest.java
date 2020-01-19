@@ -27,7 +27,7 @@ public class HuToolExcelTest {
     public void copyExcel() {
         ExcelReader reader = ExcelUtil.getReader("C:\\IdeaProjects\\study_notes\\src\\main\\java\\cn\\bobasyu\\apache\\poi\\test\\flagger_template_new.xlsx",2);
         List<List<Object>> readAll = reader.read();
-        ExcelWriter writer = ExcelUtil.getWriterWithSheet("C:\\IdeaProjects\\study_notes\\src\\main\\java\\cn\\bobasyu\\apache\\poi\\test\\new.xlsx");
+        ExcelWriter writer = ExcelUtil.getWriterWithSheet("C:\\IdeaProjects\\study_notes\\src\\main\\java\\cn\\bobasyu\\apache\\poi\\test\\test.xlsx");
         List<List<String>> msgList = readCsv();
         writer.write(readAll, true);
         writer.close();

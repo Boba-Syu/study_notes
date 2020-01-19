@@ -36,7 +36,7 @@ public class FlaggedTemplateExcel {
 
     public static void main(String[] args) {
         String fromExcel = "src\\main\\java\\cn\\bobasyu\\apache\\poi\\test\\flagger_template.xlsx";
-        String newExcel = "src\\main\\java\\cn\\bobasyu\\apache\\poi\\test\\new.xlsx";
+        String newExcel = "src\\main\\java\\cn\\bobasyu\\apache\\poi\\test\\test.xlsx";
         FlaggedTemplateExcel flaggedTemplateExcel = new FlaggedTemplateExcel();
         List<String[]> msg = flaggedTemplateExcel.readCsv();
         flaggedTemplateExcel.inputMsg(msg, fromExcel, newExcel);

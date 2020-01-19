@@ -43,9 +43,9 @@ object ObjectAndClass {
 
     class InnerClass {
       // 能被scala包下的类访问
-      private[scala] var x = null
+      private[scala] val x = 1
       // 只能被自己访问
-      private[this] var y = null
+      private[this] val y = 2
 
     }
 
@@ -64,4 +64,3 @@ object ObjectAndClass {
   }
 
 }
-

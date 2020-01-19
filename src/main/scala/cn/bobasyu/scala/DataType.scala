@@ -1,6 +1,6 @@
 package cn.bobasyu.scala
 
-import Array._
+import scala.Array.{concat, ofDim}
 
 /**
  * Scala变量类型

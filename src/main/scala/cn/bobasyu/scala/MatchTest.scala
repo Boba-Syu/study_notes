@@ -33,8 +33,8 @@ object MatchTest {
   def anyMatch(x: Any): Any = x match {
     case 1 => "one"
     case "two" => 2
-    case y: Int => "scala.Int"
-    case y: Double => "scala.Double"
+    case _: Int => "scala.Int"
+    case _: Double => "scala.Double"
     case _ => "many"
   }
 
