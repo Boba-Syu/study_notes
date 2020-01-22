@@ -28,9 +28,9 @@ public class ReadCsvToDatabase {
      * @return 得到的数据路连接
      */
     public static Connection getConnect() {
-        String url = "jdbc:mysql://localhost:3306/test?characterEncoding=utf-8";
+        String url = "jdbc:mysql://localhost/test?characterEncoding=utf-8";
         String user = "root";
-        String password = "Aa123456.";
+        String password = "123456A";
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
             return DriverManager.getConnection(url, user, password);
